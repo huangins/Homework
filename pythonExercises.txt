@@ -1,0 +1,116 @@
+起源
+Python，大約是在一九九○年代的當頭，由 Guido van Rossum 所發明。起初，Guido 原本只是 Amoeba 分散式處理作業系統計畫中的一個成員，為了尋找一個較為合適的語言來從事這個計畫，由此而觸發他設計 Python 這一套程式語言的念頭。早期設計上的構想，受到 Modula 程式語言系列的影響，當然也參考到 ABC、Icon 或 Smalltalk 這類物件導向式語言，在技術層面上確實融合多方優點，加上其發展的過程，有興趣參與的朋友可以從 FTP 站自由取得原始碼，或直接在新聞群組上參加討論，使得 Python 的改版相當積極。直至目前為止，Guido 還是 Python 最關鍵的發展人員之一，並且組成名為 PythonLabs 的開發團隊專注於版本改進。
+音意
+據一位在美國的網友表示，Python 讀音類似 PIEson，在此提出供大家參考。至於以 Python 命名的由來，據 Guido van Rossum 表示，是取自於 BBC 著名的喜劇影集「Monty Python's Flying Circus」，不過，由於 Python 的字意，最常見的是「大蟒蛇」，因此 Python 的「吉祥物」就是「蟒蛇」的形象了。我認為這是 Python 最大的先天資產，開放源碼社群裡通常有個好玩的現象：「專案的領袖最好具備高超的幽默感，以便產生獨特的魅力。」這類的行事風格，在 Linux、Perl、Python 的通信論壇裡時有所聞。
+
+Do not use mutable objects as default values in the function or method definition.
+
+__name__: 正在執行的function的名稱
+__file__: 執行的file的名稱
+
+
+outfile = open(".haha", 'w')
+outfile.close()
+
+
+
+
+def febonacci(n):
+	if n < 2:
+		return 1
+	else:
+		return febonacci(n-1) + febonacci(n-2)
+febonacci(50)
+
+
+
+
+def cache(func):
+    caches = {}
+    def wrap(*s):
+        if s not in caches:
+            caches[s] = func(*s)
+        return caches[s]
+    return wrap
+@cache
+def febonacci(n):
+	if n < 2:
+		return 1
+	else:
+		return febonacci(n-1) + febonacci(n-2)
+febonacci(50)
+
+
+
+
+
+import pickle
+cache = {}
+def febonacci(n):
+	if n < 2:
+		tmp = 1
+	elif n in cache:
+		tmp = cache[n]
+	else:
+		tmp = febonacci(n-1) + febonacci(n-2)
+	cache[n] = tmp
+	return tmp
+num = febonacci(50)
+print num
+pickle.dump(cache, open("febo_cache.dat",'w'))
+
+import pickle
+cache = pickle.load(open("febo_cache.dat",'r'))
+print len(cache)
+for i in range(0,50):
+	print cache[i]
+
+
+
+
+import pickle
+from sys import argv
+
+cache = {}
+def febonacci(n):
+	'''
+	Hello, This is just description message of this febonacci function
+	options:
+		-m=<int>
+    '''
+	if n < 2:
+		tmp = 1
+	elif n in cache:
+		tmp = cache[n]
+	else:
+		tmp = febonacci(n-1) + febonacci(n-2)
+	cache[n] = tmp
+	return tmp
+	
+import clime.now
+
+
+
+
+不論有沒有錯誤都會關閉handler
+
+
+
+file = open("big5.txt",'r')
+str = file.read()
+print str.decode('big5')
+
+
+input = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+list = ["", "", ""]
+for i in range(0, len(input)):
+	for j in range(0, 3):
+		if i%3 == j:
+			list[j] += input[i]
+			break
+print list
+
+
+
+
+

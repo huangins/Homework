@@ -1,0 +1,4 @@
+.bashrc
+.env/
+*.pyc
+*.dat
