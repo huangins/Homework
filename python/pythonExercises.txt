@@ -11,7 +11,7 @@ __file__: 執行的file的名稱
 
 outfile = open(".haha", 'w')
 outfile.close()
-
+用os.path.dirname("tmp1/tmp2/xxx") => tmp1/tmp2
 
 
 
@@ -58,6 +58,9 @@ def febonacci(n):
 num = febonacci(50)
 print num
 pickle.dump(cache, open("febo_cache.dat",'w'))
+
+
+
 
 import pickle
 cache = pickle.load(open("febo_cache.dat",'r'))

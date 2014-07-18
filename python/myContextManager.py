@@ -7,7 +7,7 @@ class fake_system():
     def __enter__(self):
         os.system = lambda x: None
         return
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, *arg):
         os.system = self.tmp
 
 with fake_system(os): 
