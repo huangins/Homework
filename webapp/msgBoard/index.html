@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<head>
+  <link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+</head>
+<html>
+  <body>
+    {% for greeting in greetings %}
+      {% if greeting.author %}
+        <b>{{ greeting.author.nickname() }}</b> wrote:
+      {% else %}
+       An anonymous person wrote:
+      {% endif %}
+      {% if greeting.warning %}
+        <blockquote>CANNOT BE SHOWN BECAUSE OF RESTRICTED WORDS</blockquote>
+      {% else %}
+        <blockquote>{{ greeting.content }}</blockquote>
+      {% endif %}
+    {% endfor %}
+
+    {% if do_warning %}
+        <p>**************************************</p>
+        <p>* You shold not write words like 天安門 or 台獨 *</p>
+        <p>**************************************</p>
+    {% endif %}
+
+    <form action="/sign?guestbook_name={{ guestbook_name }}" method="post">
+      <div><textarea name="content" rows="3" cols="60"></textarea></div>
+      <div><input type="submit" value="Sign Guestbook"></div>
+    </form>
+
+    <hr>
+
+    <form>Guestbook name:
+      <input value="{{ guestbook_name }}" name="guestbook_name">
+      <input type="submit" value="switch">
+    </form>
+
+    <a href="{{ url|safe }}">{{ url_linktext }}</a>
+
+  </body>
+</html>
+{% endautoescape %}
