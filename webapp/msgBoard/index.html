@@ -1,43 +1,72 @@
 <!DOCTYPE html>
 {% autoescape true %}
 <head>
-  <link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+  <link type="text/css" rel="stylesheet" href="/stylesheets/bootstrap.css" />
 </head>
 <html>
   <body>
-    {% for greeting in greetings %}
-      {% if greeting.author %}
-        <b>{{ greeting.author.nickname() }}</b> wrote:
-      {% else %}
-       An anonymous person wrote:
-      {% endif %}
-      {% if greeting.warning %}
-        <blockquote>CANNOT BE SHOWN BECAUSE OF RESTRICTED WORDS</blockquote>
-      {% else %}
-        <blockquote>{{ greeting.content }}</blockquote>
-      {% endif %}
-    {% endfor %}
+    <div class="container-fluid">
+    <div class="row">
+      <h1 style="text-align:center">安全言論留言板</h1>
+    </div>
+    <div class="row">
+        <div class="col-xs-2" style="color:red">
+          <h2>留</h2>
+          <h2>言</h2>
+          <h2>版</h2>
+        </div>
+        <div class="col-xs-8">
+            {% for greeting in greetings %}
+              <div class="media">
+                <div class="media-body">
+                  <h4 class="media-heading">
+                  {% if greeting.author %}
+                    {{ greeting.author.nickname() }}:
+                  {% else %}
+                    Anonymous:
+                  {% endif %}
+                  </h4>
+                  <p>
+                  {% if greeting.warning %}
+                    CANNOT BE SHOWN BECAUSE OF RESTRICTED WORDS
+                  {% else %}
+                    {{ greeting.content }}
+                  {% endif %}
+                  </p>
+                </div>
+              </div>
+            {% endfor %}
 
-    {% if do_warning %}
-        <p>**************************************</p>
-        <p>* You shold not write words like 天安門 or 台獨 *</p>
-        <p>**************************************</p>
-    {% endif %}
 
-    <form action="/sign?guestbook_name={{ guestbook_name }}" method="post">
-      <div><textarea name="content" rows="3" cols="60"></textarea></div>
-      <div><input type="submit" value="Sign Guestbook"></div>
-    </form>
+          {% if do_warning %}
+              <p>**************************************</p>
+              <p>* You shold not write words like 天安門 or 台獨 *</p>
+              <p>**************************************</p>
+          {% endif %}
 
-    <hr>
+          <form action="/?guestbook_name={{ guestbook_name }}" method="post">
+            <div><textarea name="content" rows="3" cols="60"></textarea></div>
+            <div><input type="submit" value="Sign Guestbook"></div>
+          </form>
 
-    <form>Guestbook name:
-      <input value="{{ guestbook_name }}" name="guestbook_name">
-      <input type="submit" value="switch">
-    </form>
 
-    <a href="{{ url|safe }}">{{ url_linktext }}</a>
-
+          <a href="{{ url|safe }}">{% if usr_login %}LOG OUT{% else %}LOG IN{% endif %}</a>
+        </div>
+        <div class="col-xs-2">
+          <h2>留</h2>
+          <h2>言</h2>
+          <h2>版</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-6 col-xs-offset-1"  style="background-color:yellow">
+          <form>Guestbook name:
+            <input value="{{ guestbook_name }}" name="guestbook_name">
+            <input type="submit" value="switch">
+          </form>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
 {% endautoescape %}

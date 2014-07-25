@@ -7,6 +7,7 @@ from google.appengine.ext import ndb
 
 import webapp2
 import jinja2
+import facebook
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -15,6 +16,9 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 DEFAULT_GUESTBOOK_NAME = 'default_guestbook'
 RESTRICTED_WORDS = [u'天安門', u'台獨']
+
+FACEBOOK_APP_ID = "your app id"
+FACEBOOK_APP_SECRET = "your app secret"
 
 # We set a parent key on the 'Greetings' to ensure that they are all in the same
 # entity group. Queries across the single entity group will be consistent.
@@ -33,7 +37,6 @@ class Greeting(ndb.Model):
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
-        self.response.write('<html><body>')
         guestbook_name = self.request.get('guestbook_name',
                                           DEFAULT_GUESTBOOK_NAME)
 
@@ -44,27 +47,32 @@ class MainPage(webapp2.RequestHandler):
         # show up in a query.
         greetings_query = Greeting.query(
             ancestor=guestbook_key(guestbook_name)).order(-Greeting.date)
-        greetings = greetings_query.fetch(5)
+        greetings = greetings_query.fetch(10)
+        greetings.reverse()
 
         if users.get_current_user():
             url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
+            usr_login = True
         else:
             url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
+            usr_login = False
+
+        if len(greetings) > 0:
+            do_warning = greetings[0].warning
+        else:
+            do_warning = False
 
         template_values = {
             'greetings': greetings,
             'guestbook_name': urllib.quote_plus(guestbook_name),
             'url': url,
-            'url_linktext': url_linktext,
-            'do_warning': greetings[0].warning,
+            'usr_login': usr_login,
+            'do_warning': do_warning,
         }
 
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
 
-class Guestbook(webapp2.RequestHandler):
     def post(self):
         # We set the same parent key on the 'Greeting' to ensure each Greeting
         # is in the same entity group. Queries across the single entity group
@@ -87,7 +95,15 @@ class Guestbook(webapp2.RequestHandler):
         query_params = {'guestbook_name': guestbook_name}
         self.redirect('/?' + urllib.urlencode(query_params))
 
+
+class LoginHandler(webapp2.RequestHandler):
+    def get(self):
+        pass
+    def post(self):
+        self.redirect('/')
+
+
 application = webapp2.WSGIApplication([
     ('/', MainPage),
-    ('/sign', Guestbook),
+    ('/login', LoginHandler),
 ], debug=True)
