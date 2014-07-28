@@ -7,7 +7,7 @@
   <body>
     <div class="container-fluid">
     <div class="row">
-      <h1 style="text-align:center">安全言論留言板</h1>
+      <h1 style="text-align:center">安全言論留言板:{{ guestbook_name }}</h1>
     </div>
     <div class="row">
         <div class="col-xs-2" style="color:red">
@@ -45,7 +45,7 @@
           {% endif %}
 
           <form action="/?guestbook_name={{ guestbook_name }}" method="post">
-            <div><textarea name="content" rows="3" cols="60"></textarea></div>
+            <div>{{ text_form.inputstring }}</div>
             <div><input type="submit" value="Sign Guestbook"></div>
           </form>
 
@@ -59,9 +59,9 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-xs-6 col-xs-offset-1"  style="background-color:yellow">
-          <form>Guestbook name:
-            <input value="{{ guestbook_name }}" name="guestbook_name">
+        <div class="col-xs-6 col-xs-offset-1">
+          <form action="/changebook?guestbook_name={{ guestbook_name }}" method="post">
+            <div>Guestbook name: {{ book_form.guestbook_name }}</div>
             <input type="submit" value="switch">
           </form>
         </div>

@@ -5,9 +5,13 @@ import urllib
 from google.appengine.api import users
 from google.appengine.ext import ndb
 
+import logging
 import webapp2
 import jinja2
 import facebook
+
+from wtforms import Form, StringField, TextAreaField, validators
+
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -19,6 +23,14 @@ RESTRICTED_WORDS = [u'天安門', u'台獨']
 
 FACEBOOK_APP_ID = "your app id"
 FACEBOOK_APP_SECRET = "your app secret"
+
+class TextInputForm(Form):
+    inputstring = TextAreaField('Inputstring', [validators.InputRequired()])
+
+class ChangeGuestBookForm(Form):
+    guestbook_name = StringField('guestbook_name',
+                           [validators.InputRequired(), validators.AnyOf(['default_guestbook','guestbook3'], message="Invalid book")],
+                           default=u'default_guestbook')
 
 # We set a parent key on the 'Greetings' to ensure that they are all in the same
 # entity group. Queries across the single entity group will be consistent.
@@ -37,9 +49,13 @@ class Greeting(ndb.Model):
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
+        text_form = TextInputForm()
+        book_form = ChangeGuestBookForm()
+        
         guestbook_name = self.request.get('guestbook_name',
-                                          DEFAULT_GUESTBOOK_NAME)
+                                    DEFAULT_GUESTBOOK_NAME)
 
+        book_form.guestbook_name.data = guestbook_name
         # Ancestor Queries, as shown here, are strongly consistent with the High
         # Replication Datastore. Queries that span entity groups are eventually
         # consistent. If we omitted the ancestor from this query there would be
@@ -64,10 +80,12 @@ class MainPage(webapp2.RequestHandler):
 
         template_values = {
             'greetings': greetings,
-            'guestbook_name': urllib.quote_plus(guestbook_name),
+            'guestbook_name': guestbook_name,
             'url': url,
             'usr_login': usr_login,
             'do_warning': do_warning,
+            'text_form': text_form,
+            'book_form': book_form
         }
 
         template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -78,23 +96,37 @@ class MainPage(webapp2.RequestHandler):
         # is in the same entity group. Queries across the single entity group
         # will be consistent. However, the write rate to a single entity group
         # should be limited to ~1/second.
-        guestbook_name = self.request.get('guestbook_name',
-                                          DEFAULT_GUESTBOOK_NAME)
-        greeting = Greeting(parent=guestbook_key(guestbook_name))
+        bookname = self.request.get('guestbook_name')
+        text_form = TextInputForm(self.request.POST)
 
-        if users.get_current_user():
-            greeting.author = users.get_current_user()
+        if text_form.validate():
+            greeting = Greeting(parent=guestbook_key(bookname))
 
-        greeting.content = self.request.get('content')
-        warning = False
-        for word in RESTRICTED_WORDS:
-            warning |= (greeting.content.find(word) != -1)
-        greeting.warning = warning
-        greeting.put()
+            if users.get_current_user():
+                greeting.author = users.get_current_user()
 
-        query_params = {'guestbook_name': guestbook_name}
+            greeting.content = text_form.inputstring.data
+            warning = False
+            for word in RESTRICTED_WORDS:
+                warning |= (greeting.content.find(word) != -1)
+            greeting.warning = warning
+            greeting.put()
+
+        query_params = {'guestbook_name': bookname}
         self.redirect('/?' + urllib.urlencode(query_params))
 
+class ChangeBookHandler(webapp2.RequestHandler):
+    def post(self):
+        bookname = self.request.get('guestbook_name')
+        logging.info("=====%s======" % bookname)
+        book_form = ChangeGuestBookForm(self.request.POST)
+
+        if book_form.validate():
+            query_params = {'guestbook_name': book_form.guestbook_name.data}
+        else:
+            query_params = {'guestbook_name': bookname}
+
+        self.redirect('/?' + urllib.urlencode(query_params))
 
 class LoginHandler(webapp2.RequestHandler):
     def get(self):
@@ -105,5 +137,6 @@ class LoginHandler(webapp2.RequestHandler):
 
 application = webapp2.WSGIApplication([
     ('/', MainPage),
+    ('/changebook', ChangeBookHandler),
     ('/login', LoginHandler),
 ], debug=True)
