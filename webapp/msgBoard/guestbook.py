@@ -5,13 +5,17 @@ import urllib
 from google.appengine.api import users
 from google.appengine.ext import ndb
 
+
 import logging
 import webapp2
 import jinja2
 import facebook
 
+from webapp2_extras import sessions
 from wtforms import Form, StringField, TextAreaField, validators
 
+config = {}
+config['webapp2_extras.sessions'] = dict(secret_key='')
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -21,8 +25,8 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 DEFAULT_GUESTBOOK_NAME = 'default_guestbook'
 RESTRICTED_WORDS = [u'天安門', u'台獨']
 
-FACEBOOK_APP_ID = "your app id"
-FACEBOOK_APP_SECRET = "your app secret"
+FACEBOOK_APP_ID = "498674806942717"
+FACEBOOK_APP_SECRET = "9b0b204fca2f08f1f3d19a41ee8b9eaf"
 
 class TextInputForm(Form):
     inputstring = TextAreaField('Inputstring', [validators.InputRequired()])
@@ -47,7 +51,77 @@ class Greeting(ndb.Model):
     date = ndb.DateTimeProperty(auto_now_add=True)
     warning = ndb.BooleanProperty()
 
-class MainPage(webapp2.RequestHandler):
+class BaseHandler(webapp2.RequestHandler):
+
+    """Provides access to the active Facebook user in self.current_user
+
+    The property is lazy-loaded on first access, using the cookie saved
+    by the Facebook JavaScript SDK to determine the user ID of the active
+    user. See http://developers.facebook.com/docs/authentication/ for
+    more information.
+    """
+    def current_user(self):
+        if self.session.get("user"):
+            # User is logged in
+            return self.session.get("user")
+        elif users.get_current_user():
+            current_user = users.get_current_user()
+            user = dict(
+                    id=current_user.user_id(),
+                    nickname=current_user.nickname(),
+                    profile_url="",
+                    access_token="",
+                    is_google=True
+                )
+            # User is now logged in
+            self.session["user"] = user
+            return self.session.get("user")
+        else:
+            # Either used just logged in or just saw the first page
+            # We'll see here
+            cookie = facebook.get_user_from_cookie(self.request.cookies,
+                                                   FACEBOOK_APP_ID,
+                                                   FACEBOOK_APP_SECRET)
+            if cookie:
+                # Not an existing user so get user info
+                graph = facebook.GraphAPI(cookie["access_token"])
+                profile = graph.get_object("me")
+                user = dict(
+                    id=str(profile["id"]),
+                    nickname=profile["name"],
+                    profile_url=profile["link"],
+                    access_token=cookie["access_token"],
+                    is_google=False
+                )
+                # User is now logged in
+                self.session["user"] = user
+                return self.session.get("user")
+        return None
+
+    def dispatch(self):
+        """
+        This snippet of code is taken from the webapp2 framework documentation.
+        See more at
+        http://webapp-improved.appspot.com/api/webapp2_extras/sessions.html
+
+        """
+        self.session_store = sessions.get_store(request=self.request)
+        try:
+            webapp2.RequestHandler.dispatch(self)
+        finally:
+            self.session_store.save_sessions(self.response)
+
+    @webapp2.cached_property
+    def session(self):
+        """
+        This snippet of code is taken from the webapp2 framework documentation.
+        See more at
+        http://webapp-improved.appspot.com/api/webapp2_extras/sessions.html
+
+        """
+        return self.session_store.get_session()
+
+class MainPage(BaseHandler):
     def get(self):
         text_form = TextInputForm()
         book_form = ChangeGuestBookForm()
@@ -66,11 +140,15 @@ class MainPage(webapp2.RequestHandler):
         greetings = greetings_query.fetch(10)
         greetings.reverse()
 
-        if users.get_current_user():
-            url = users.create_logout_url(self.request.uri)
+        current_user = self.current_user()
+
+        logging.info(current_user)
+
+        if current_user:
+            url = users.create_logout_url(self.request.host_url + '/login')
             usr_login = True
         else:
-            url = users.create_login_url(self.request.uri)
+            url = self.request.host_url + '/login'
             usr_login = False
 
         if len(greetings) > 0:
@@ -102,8 +180,8 @@ class MainPage(webapp2.RequestHandler):
         if text_form.validate():
             greeting = Greeting(parent=guestbook_key(bookname))
 
-            if users.get_current_user():
-                greeting.author = users.get_current_user()
+            if self.current_user():
+                greeting.author = self.current_user()
 
             greeting.content = text_form.inputstring.data
             warning = False
@@ -118,7 +196,6 @@ class MainPage(webapp2.RequestHandler):
 class ChangeBookHandler(webapp2.RequestHandler):
     def post(self):
         bookname = self.request.get('guestbook_name')
-        logging.info("=====%s======" % bookname)
         book_form = ChangeGuestBookForm(self.request.POST)
 
         if book_form.validate():
@@ -128,15 +205,21 @@ class ChangeBookHandler(webapp2.RequestHandler):
 
         self.redirect('/?' + urllib.urlencode(query_params))
 
-class LoginHandler(webapp2.RequestHandler):
+class LoginHandler(BaseHandler):
     def get(self):
-        pass
-    def post(self):
-        self.redirect('/')
+        self.session["user"] = None
+        template_values = {
+            'facebook_app_id': FACEBOOK_APP_ID,
+            'google_login': users.create_login_url(self.request.host_url),
+            'url': self.request.host_url
+        }
+
+        template = JINJA_ENVIRONMENT.get_template('login.html')
+        self.response.write(template.render(template_values))
 
 
 application = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/changebook', ChangeBookHandler),
     ('/login', LoginHandler),
-], debug=True)
+], debug=True, config=config)
