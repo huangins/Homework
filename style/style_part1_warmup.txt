@@ -1,0 +1,24 @@
+CSS 的全名，為什麼叫這個名字?
+	Cascading Style Sheets
+
+誰發明 css ?
+
+OOCSS 是個概念，是組織你的 CSS 的 更好的寫法，請讀一下。
+OOCSS   ， 投影片 http://www.slideshare.net/stubbornella/object-oriented-css
+最重要的兩個 Principle 是什麼?
+	SEPARATION OF STRUCTURE FROM SKIN
+	SEPARATION OF CONTAINERS AND CONTENT
+投影片講到 lego first, 請問一下是怎麼樣的概念? 
+	Design indivisual pages once all the LEGOs have been defined.
+
+
+請讀過 Github 的 Style Guide https://github.com/styleguide/css
+那一個是 Github 建議的寫法?  .listings-layout.bigger   還是  .listings-layout.listings-bigger
+	後者，想想之後要grep什麼的時候。
+js 開頭的 class name 想要拿來做什麼用呢，這要多查一下。
+
+
+當然還有可汗的 Style Guide https://sites.google.com/a/khanacademy.org/forge/for-developers/styleguide/html-css-etc
+這裡有提到 less, 先看看就好，以後再回來慢慢看。
+khan 喜歡那一種 class name 的寫法呢? .my-class 還是 .my_class
+	Khan喜歡-
