@@ -1,72 +1,85 @@
 <!DOCTYPE html>
 {% autoescape true %}
 <head>
-  <link type="text/css" rel="stylesheet" href="/stylesheets/bootstrap.css" />
+    <link type="text/css" rel="stylesheet" href="/stylesheets/bootstrap.css" />
+    <style>
+        .text-box {
+            padding: 20px;
+        }
+        .input-message {
+            background-color: gray;
+        }
+        .history-message {
+            background-color: white;
+        } 
+</style>
 </head>
 <html>
-  <body>
-    <div class="container-fluid">
-    <div class="row">
-      <h1 style="text-align:center">安全言論留言板:{{ guestbook_name }}</h1>
-    </div>
-    <div class="row">
-        <div class="col-xs-2" style="color:red">
-          <h2>留</h2>
-          <h2>言</h2>
-          <h2>版</h2>
-        </div>
-        <div class="col-xs-8">
-            {% for greeting in greetings %}
-              <div class="media">
-                <div class="media-body">
-                  <h4 class="media-heading">
-                  {% if greeting.author %}
-                    {{ greeting.author.nickname() }}:
-                  {% else %}
-                    Anonymous:
-                  {% endif %}
-                  </h4>
-                  <p>
-                  {% if greeting.warning %}
-                    CANNOT BE SHOWN BECAUSE OF RESTRICTED WORDS
-                  {% else %}
-                    {{ greeting.content }}
-                  {% endif %}
-                  </p>
+    <body>
+        <div class="container-fluid">
+            <div class="row">
+                <h1 style="text-align:center">安全言論留言板:{{ guestbook_name }}</h1>
+            </div>
+            <div class="row">
+                <div class="col-xs-2" style="color:red">
+                    <h2>留</h2>
+                    <h2>言</h2>
+                    <h2>版</h2>
                 </div>
-              </div>
-            {% endfor %}
+                <div class="col-xs-8">
+                    {% if do_warning %}
+                        <p>**************************************</p>
+                        <p>* You shold not write words like 天安門 or 台獨 *</p>
+                        <p>**************************************</p>
+                    {% endif %}
 
+                    <div class="text-box input-message">
+                        <form action="/?guestbook_name={{ guestbook_name }}" method="post">
+                            <div><textarea name="content" rows="3" cols="60">分享最新動態...</textarea></div>
+                            <div><input type="submit" value="Sign Guestbook"></div>
+                        </form>
+                    </div>
 
-          {% if do_warning %}
-              <p>**************************************</p>
-              <p>* You shold not write words like 天安門 or 台獨 *</p>
-              <p>**************************************</p>
-          {% endif %}
+                    {% for greeting in greetings %}
+                        <div class="text-box history-message">
+                            <div class="media">
+                                <div class="media-body">
+                                    <h4 class="media-heading">
+                                    {% if greeting.author %}
+                                        {{ greeting.author.nickname() }}:
+                                    {% else %}
+                                        Anonymous:
+                                    {% endif %}
+                                    </h4>
+                                    <p>
+                                    {% if greeting.warning %}
+                                        CANNOT BE SHOWN BECAUSE OF RESTRICTED WORDS
+                                    {% else %}
+                                        {{ greeting.content }}
+                                    {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
 
-          <form action="/?guestbook_name={{ guestbook_name }}" method="post">
-            <div>{{ text_form.inputstring }}</div>
-            <div><input type="submit" value="Sign Guestbook"></div>
-          </form>
-
-
-          <a href="{{ url|safe }}">{% if usr_login %}LOG OUT{% else %}LOG IN{% endif %}</a>
+                    <a href="{{ url|safe }}">{% if usr_login %}LOG OUT{% else %}LOG IN{% endif %}</a>
+                </div>
+                <div class="col-xs-2">
+                    <h2>留</h2>
+                    <h2>言</h2>
+                    <h2>版</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6 col-xs-offset-1">
+                    <form action="/changebook?guestbook_name={{ guestbook_name }}" method="post">
+                        <div>Guestbook name: {{ book_form.guestbook_name }}</div>
+                        <input type="submit" value="switch">
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="col-xs-2">
-          <h2>留</h2>
-          <h2>言</h2>
-          <h2>版</h2>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-6 col-xs-offset-1">
-          <form action="/changebook?guestbook_name={{ guestbook_name }}" method="post">
-            <div>Guestbook name: {{ book_form.guestbook_name }}</div>
-            <input type="submit" value="switch">
-          </form>
-        </div>
-      </div>
-    </div>
-  </body>
+    </body>
 </html>
 {% endautoescape %}

@@ -24,7 +24,7 @@ FACEBOOK_APP_ID = "your app id"
 FACEBOOK_APP_SECRET = "your app secret"
 
 class TextInputForm(Form):
-    inputstring = TextAreaField('Inputstring', [validators.InputRequired()])
+    inputstring = TextAreaField(u'Inputstring', [validators.InputRequired()])
 
 class ChangeGuestBookForm(Form):
     guestbook_name = StringField('guestbook_name',
@@ -83,7 +83,7 @@ class MainPage(webapp2.RequestHandler):
             'url': url,
             'usr_login': usr_login,
             'do_warning': do_warning,
-            'text_form': text_form,
+            #'text_form': text_form,
             'book_form': book_form
         }
 
@@ -96,7 +96,7 @@ class MainPage(webapp2.RequestHandler):
         # will be consistent. However, the write rate to a single entity group
         # should be limited to ~1/second.
         bookname = self.request.get('guestbook_name')
-        text_form = TextInputForm(self.request.POST)
+        #text_form = TextInputForm(self.request.POST)
 
         if text_form.validate():
             greeting = Greeting(parent=guestbook_key(bookname))
@@ -104,7 +104,7 @@ class MainPage(webapp2.RequestHandler):
             if users.get_current_user():
                 greeting.author = users.get_current_user()
 
-            greeting.content = text_form.inputstring.data
+            greeting.content = self.request.get('content')#text_form.inputstring.data
             warning = False
             for word in RESTRICTED_WORDS:
                 warning |= (greeting.content.find(word) != -1)
